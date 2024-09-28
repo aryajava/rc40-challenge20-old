@@ -2,7 +2,7 @@
 
 > Challenge 20
 
-This BREAD project is Express JS application with EJS template engine.
+This BREAD (Browse, Read, Edit, Add, Delete) project is Express JS application with EJS template engine.
 
 ## Table of Contents
 
