@@ -1,0 +1,38 @@
+{
+  "name": "rc40-challenge20",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aryajava/rc40-challenge20.git"
+  },
+  "keywords": [
+    "javascript",
+    "nodejs",
+    "expressjs",
+    "ejs",
+    "sqlite3",
+    "bread",
+    "pagination"
+  ],
+  "author": "aryajava",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/aryajava/rc40-challenge20/issues"
+  },
+  "homepage": "https://github.com/aryajava/rc40-challenge20#readme",
+  "description": "This BREAD project is Express JS application with EJS template engine.",
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.0",
+    "sqlite3": "^5.1.7"
+  }
+}
