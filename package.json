@@ -26,7 +26,7 @@
     "url": "https://github.com/aryajava/rc40-challenge20/issues"
   },
   "homepage": "https://github.com/aryajava/rc40-challenge20#readme",
-  "description": "This BREAD project is Express JS application with EJS template engine.",
+  "description": "This BREAD (Browse, Read, Edit, Add, Delete) project is Express JS application with EJS template engine.",
   "devDependencies": {
     "nodemon": "^3.1.7"
   },
