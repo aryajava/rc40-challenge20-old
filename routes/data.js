@@ -50,7 +50,6 @@ export default (db) => {
       const pages = Math.ceil(total / limit);
       let query = `SELECT * FROM data ${whereClause} ORDER BY id ASC LIMIT ? OFFSET ?`;
 
-      // Get the data from the database
       db.all(query, [...params, limit, offset], (err, rows) => {
         if (err) {
           return next(err);

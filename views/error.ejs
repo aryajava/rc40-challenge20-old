@@ -1,3 +1,21 @@
-<h1><%= message %></h1>
-<h2><%= error.status %></h2>
-<pre><%= error.stack %></pre>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BREAD (Browse, Read, Edit, Add, Delete)</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="error-msg text-center"><%= message %></h1>
+    <h2 class="error-code text-center"><%= error.status %></h2>
+    <% if (error.stack) { %>
+    <pre class="error-stack"><%= error.stack %></pre>
+    <% } %>
+  </div>
+</body>
+
+</html>

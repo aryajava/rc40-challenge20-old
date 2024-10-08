@@ -21,7 +21,6 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/", dataRouter(db));
 
-// Handle 404
 app.use((req, res, next) => {
   res.status(404).render("error", {
     message: "Page Not Found",
@@ -29,12 +28,13 @@ app.use((req, res, next) => {
   });
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   res.status(err.status || 500);
+
   res.render("error", {
-    message: err.message,
     error: err,
+    message: err.message,
+    stack: err.stack,
   });
 });
 
