@@ -1,202 +1,162 @@
 import { Router } from "express";
-import { db } from "../app.js";
 const router = Router();
 
-// Browse (Pagination & Search)
-router.get("/", (req, res) => {
-  const { page = 1 } = req.query;
-  const limit = 5;
-  const offset = (page - 1) * limit;
-  const { name, height, weight, startdate, lastdate, married, operation = "AND" } = req.query;
+export default (db) => {
+  // model query
+  const getById = (id, callback) => {
+    db.get("SELECT * FROM data WHERE id = ?", [id], (err, row) => {
+      if (err) return callback(err);
+      if (!row) return callback(new Error("No record found"));
+      callback(null, row);
+    });
+  };
 
-  // Query untuk mengambil data
-  let query = "SELECT * FROM data WHERE 1=1 ";
-  let totalCountQuery = "SELECT COUNT(*) AS count FROM data WHERE 1=1";
-  let params = [];
+  const add = (name, height, weight, birthdate, married, callback) => {
+    db.run("INSERT INTO data(name, height, weight, birthdate, married) VALUES(?, ?, ?, ?, ?)", [name, height, weight, birthdate, married], (err) => {
+      if (err) {
+        return callback(err);
+      }
+      callback(null);
+    });
+  };
 
-  // Tambahkan kondisi untuk totalCountQuery
-  if (name) {
-    totalCountQuery += " AND name LIKE ?";
-    params.push(`%${name}%`);
-  }
-  if (height) {
-    totalCountQuery += " AND height = ?";
-    params.push(height);
-  }
-  if (weight) {
-    totalCountQuery += " AND weight = ?";
-    params.push(weight);
-  }
-  if (startdate) {
-    totalCountQuery += " AND birthdate >= ?";
-    params.push(startdate);
-  }
-  if (lastdate) {
-    totalCountQuery += " AND birthdate <= ?";
-    params.push(lastdate);
-  }
-  if (married) {
-    totalCountQuery += " AND married = ?";
-    params.push(married === "Yes" ? 1 : 0);
-  }
+  const update = (id, name, height, weight, birthdate, married, callback) => {
+    db.run("UPDATE data SET name = ?, height = ?, weight = ?, birthdate = ?, married = ? WHERE id = ?", [name, height, weight, birthdate, married, id], (err) => {
+      if (err) {
+        return callback(err);
+      }
+      callback(null);
+    });
+  };
 
-  // Log untuk debugging
-  console.log("Total Count Query:", totalCountQuery);
-  console.log("Params for Count:", params);
+  const edit = (id, name, height, weight, birthdate, married, callback) => {
+    db.run("UPDATE data SET name = ?, height = ?, weight = ?, birthdate = ?, married = ? WHERE id = ?", [name, height, weight, birthdate, married, id], (err) => {
+      if (err) {
+        return callback(err);
+      }
+      callback(null);
+    });
+  };
 
-  // Jalankan query untuk mendapatkan total count
-  db.get(totalCountQuery, params, (err, row) => {
-    if (err) {
-      console.error("Error fetching total count:", err);
-      return res.status(500).send("Error fetching total count.");
-    }
-    const totalItems = row.count;
-    console.log("Total items:", totalItems);
+  const remove = (id, callback) => {
+    db.run("DELETE FROM data WHERE id = ?", [id], (err) => {
+      if (err) {
+        return callback(err);
+      }
+      callback(null);
+    });
+  };
 
-    // Reset query untuk pengambilan data
-    params = []; // Reset params untuk pengambilan data
+  // routes views
+  router.get("/", (req, res, next) => {
+    const page = req.query.page || 1;
+    const limit = 5;
+    const offset = (page - 1) * limit;
+    const { name, height, weight, startdate, lastdate, married, operation } = req.query;
 
-    // Tambahkan kondisi untuk query utama yang mengambil data
+    const conditions = [];
+    const params = [];
+
     if (name) {
-      query += " AND name LIKE ?";
-      params.push(`%${name}%`);
+      conditions.push("name LIKE '%' || ? || '%'");
+      params.push(name);
     }
     if (height) {
-      query += " AND height = ?";
+      conditions.push("height = ?");
       params.push(height);
     }
     if (weight) {
-      query += " AND weight = ?";
+      conditions.push("weight = ?");
       params.push(weight);
     }
-    if (startdate) {
-      query += " AND birthdate >= ?";
+    if (startdate && lastdate) {
+      conditions.push("birthdate BETWEEN ? AND ?");
+      params.push(startdate, lastdate);
+    } else if (startdate) {
+      conditions.push("birthdate >= ?");
       params.push(startdate);
-    }
-    if (lastdate) {
-      query += " AND birthdate <= ?";
+    } else if (lastdate) {
+      conditions.push("birthdate <= ?");
       params.push(lastdate);
     }
     if (married) {
-      query += " AND married = ?";
-      params.push(married === "Yes" ? 1 : 0);
+      conditions.push("married = ?");
+      params.push(married);
     }
 
-    // Tambahkan LIMIT dan OFFSET
-    query += " LIMIT ? OFFSET ?";
-    params.push(limit, offset);
+    let whereClause = conditions.length > 0 ? `WHERE ${conditions.join(` ${operation} `)}` : "";
+    let totalRecords = `SELECT COUNT(*) as total FROM data ${whereClause}`;
 
-    // Log untuk debugging
-    console.log("Query for fetching data:", query);
-    console.log("Params for fetching data:", params);
-
-    // Jalankan query untuk mengambil data
-    db.all(query, params, (err, rows) => {
+    db.get(totalRecords, params, (err, row) => {
       if (err) {
-        return res.status(500).send(err.message);
+        return next(err);
       }
+      const total = row.total;
+      const pages = Math.ceil(total / limit);
+      let query = `SELECT * FROM data ${whereClause} ORDER BY id ASC LIMIT ? OFFSET ?`;
 
-      // Cek apakah request berasal dari AJAX (fetch) atau HTML biasa
-      if (req.xhr || req.headers.accept.indexOf("json") > -1) {
-        // Jika request berasal dari AJAX, kirimkan data dalam format JSON
-        res.json({ rows, totalItems });
-      } else {
-        // Jika request dari browser biasa, render halaman HTML
+      // Get the data from the database
+      db.all(query, [...params, limit, offset], (err, rows) => {
+        if (err) {
+          return next(err);
+        }
+
         res.render("index", {
+          title: "SQLite BREAD (Browse, Read, Edit, Add, Delete) and Pagination",
           data: rows,
-          currentPage: page,
-          totalItems,
           searchParams: req.query,
+          total,
+          page,
+          pages,
         });
-      }
+      });
     });
   });
-});
 
-// Add
-// Render Add Form
-router.get("/add", (req, res) => {
-  res.render("add");
-});
-// Add Save
-router.post("/add", (req, res) => {
-  const { name, height, weight, birthdate, married } = req.body;
-  db.run(
-    `INSERT INTO data (name, height, weight, birthdate, married) VALUES (?, ?, ?, ?, ?)`,
-    [name, height, weight, birthdate, married === "Yes" ? 1 : 0],
-    (err) => {
-      if (err) return res.status(500).send(err.message);
-      res.redirect("/");
-    }
-  );
-});
-
-// Edit
-// Route untuk menampilkan halaman edit
-router.get("/edit/:id", (req, res) => {
-  const id = req.params.id;
-  db.get("SELECT * FROM data WHERE id = ?", [id], (err, row) => {
-    if (err) {
-      return res.status(500).send(err.message);
-    }
-    if (!row) {
-      return res.status(404).send("Data not found");
-    }
-    res.render("edit", { data: row });
+  router.get("/add", (req, res, next) => {
+    res.render("add", { title: "Adding Data" });
   });
-});
 
-// Route untuk memperbarui data
-router.post("/edit/:id", (req, res) => {
-  const id = req.params.id;
-  const { name, height, weight, birthdate, married } = req.body;
-
-  // Validasi input
-  if (!name) {
-    return res.status(400).send("Name is required");
-  }
-
-  db.run(
-    "UPDATE data SET name = ?, height = ?, weight = ?, birthdate = ?, married = ? WHERE id = ?",
-    [name, height, weight, birthdate, married === "Yes" ? 1 : 0, id],
-    function (err) {
+  router.post("/add", (req, res, next) => {
+    const { name, height, weight, birthdate, married } = req.body;
+    add(name, height, weight, birthdate, married, (err) => {
       if (err) {
-        return res.status(500).send(err.message);
+        return next(err);
       }
       res.redirect("/");
-    }
-  );
-});
-
-// // Render Edit Form
-// router.get("/edit/:id", (req, res) => {
-//   const { id } = req.params;
-//   db.get("SELECT * FROM data WHERE id = ?", [id], (err, row) => {
-//     if (err) return res.status(500).send(err.message);
-//     res.render("edit", { data: row });
-//   });
-// });
-// // Edit Save
-// router.post("/edit/:id", (req, res) => {
-//   const { id } = req.params;
-//   const { name, height, weight, birthdate, married } = req.body;
-//   db.run(
-//     `UPDATE data SET name = ?, height = ?, weight = ?, birthdate = ?, married = ? WHERE id = ?`,
-//     [name, height, weight, birthdate, married === "Yes" ? 1 : 0, id],
-//     (err) => {
-//       if (err) return res.status(500).send(err.message);
-//       res.redirect("/");
-//     }
-//   );
-// });
-
-// Delete
-router.post("/delete/:id", (req, res) => {
-  const { id } = req.params;
-  db.run("DELETE FROM data WHERE id = ?", [id], (err) => {
-    if (err) return res.status(500).send(err.message);
-    res.redirect("/");
+    });
   });
-});
 
-export default router;
+  router.get("/edit/:id", (req, res, next) => {
+    const id = req.params.id;
+    getById(id, (err, data) => {
+      if (err) {
+        return next(err);
+      }
+      res.render("edit", { title: "Updating Data", data });
+    });
+  });
+
+  router.post("/edit/:id", (req, res, next) => {
+    const id = req.params.id;
+    const { name, height, weight, birthdate, married } = req.body;
+    edit(id, name, height, weight, birthdate, married, (err) => {
+      if (err) {
+        return next(err);
+      }
+      res.redirect("/");
+    });
+  });
+
+  router.post("/remove/:id", (req, res, next) => {
+    const id = req.params.id;
+    remove(id, (err) => {
+      if (err) {
+        return next(err);
+      }
+      res.redirect("/");
+    });
+  });
+
+  return router;
+};

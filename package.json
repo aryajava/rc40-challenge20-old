@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aryajava/rc40-challenge20.git"
+    "url": "git+https://github.com/aryajava/rc40-challenge20-old.git"
   },
   "keywords": [
     "javascript",
@@ -24,9 +24,9 @@
   "author": "aryajava",
   "license": "UNLICENSED",
   "bugs": {
-    "url": "https://github.com/aryajava/rc40-challenge20/issues"
+    "url": "https://github.com/aryajava/rc40-challenge20-old/issues"
   },
-  "homepage": "https://github.com/aryajava/rc40-challenge20#readme",
+  "homepage": "https://github.com/aryajava/rc40-challenge20-old#readme",
   "description": "This BREAD (Browse, Read, Edit, Add, Delete) project is Express JS application with EJS template engine.",
   "devDependencies": {
     "nodemon": "^3.1.7"
