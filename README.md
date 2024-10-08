@@ -38,4 +38,4 @@ This project is [Unlicense License](./LICENSE).
 
 ## Contact
 
-If you have any questions or issues, please open an [issue](https://github.com/aryajava/rc40-challenge20/issues) at the issue tracker.
+If you have any questions or issues, please open an [issue](https://github.com/aryajava/rc40-challenge20-old/issues) at the issue tracker.
