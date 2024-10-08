@@ -1,53 +1,8 @@
 import { Router } from "express";
+import { add, edit, getById, remove } from "../models/Data.js";
 const router = Router();
 
 export default (db) => {
-  // model query
-  const getById = (id, callback) => {
-    db.get("SELECT * FROM data WHERE id = ?", [id], (err, row) => {
-      if (err) return callback(err);
-      if (!row) return callback(new Error("No record found"));
-      callback(null, row);
-    });
-  };
-
-  const add = (name, height, weight, birthdate, married, callback) => {
-    db.run("INSERT INTO data(name, height, weight, birthdate, married) VALUES(?, ?, ?, ?, ?)", [name, height, weight, birthdate, married], (err) => {
-      if (err) {
-        return callback(err);
-      }
-      callback(null);
-    });
-  };
-
-  const update = (id, name, height, weight, birthdate, married, callback) => {
-    db.run("UPDATE data SET name = ?, height = ?, weight = ?, birthdate = ?, married = ? WHERE id = ?", [name, height, weight, birthdate, married, id], (err) => {
-      if (err) {
-        return callback(err);
-      }
-      callback(null);
-    });
-  };
-
-  const edit = (id, name, height, weight, birthdate, married, callback) => {
-    db.run("UPDATE data SET name = ?, height = ?, weight = ?, birthdate = ?, married = ? WHERE id = ?", [name, height, weight, birthdate, married, id], (err) => {
-      if (err) {
-        return callback(err);
-      }
-      callback(null);
-    });
-  };
-
-  const remove = (id, callback) => {
-    db.run("DELETE FROM data WHERE id = ?", [id], (err) => {
-      if (err) {
-        return callback(err);
-      }
-      callback(null);
-    });
-  };
-
-  // routes views
   router.get("/", (req, res, next) => {
     const page = req.query.page || 1;
     const limit = 5;
